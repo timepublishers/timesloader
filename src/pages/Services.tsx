@@ -1,150 +1,70 @@
 import React from 'react'
+import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { 
   Globe, 
   Server, 
-  Shield, 
-  Mail, 
   Code, 
-  TrendingUp, 
-  Database,
   Smartphone,
   ArrowRight,
   CheckCircle
 } from 'lucide-react'
+import { supabase } from '../lib/supabase'
+import { formatCurrency } from '../lib/utils'
+
+interface Service {
+  id: string
+  title: string
+  description: string
+  icon: string
+  features: string[]
+  price_starting: number | null
+  is_active: boolean
+  display_order: number
+}
 
 export default function Services() {
-  const services = [
-    {
-      icon: Globe,
-      title: 'Domain Registration',
-      description: 'Secure your perfect domain name with our comprehensive domain registration services.',
-      features: [
-        'Wide range of domain extensions (.com, .pk, .org, .net)',
-        'Competitive pricing starting from PKR 3,750',
-        'Free DNS management and domain forwarding',
-        'Domain privacy protection available',
-        'Easy domain transfer services',
-        'Bulk domain registration discounts'
-      ],
-      price: 'Starting from PKR 3,750/year',
-      popular: false
-    },
-    {
-      icon: Server,
-      title: 'Web Hosting',
-      description: 'Reliable, fast, and secure web hosting solutions for businesses of all sizes.',
-      features: [
-        'SSD storage for lightning-fast performance',
-        '99.9% uptime guarantee',
-        'Free SSL certificates included',
-        'Daily automated backups',
-        'cPanel control panel',
-        '24/7 technical support',
-        'One-click app installations',
-        'Unlimited email accounts'
-      ],
-      price: 'Starting from PKR 2,500/month',
-      popular: true
-    },
-    {
-      icon: Mail,
-      title: 'Email Solutions',
-      description: 'Professional email hosting with advanced features and security.',
-      features: [
-        'Custom email addresses (@yourdomain.com)',
-        'Advanced spam and virus protection',
-        'Mobile device synchronization',
-        'Large mailbox storage (up to 50GB)',
-        'Webmail access from anywhere',
-        'Email forwarding and auto-responders',
-        'Calendar and contacts integration'
-      ],
-      price: 'Starting from PKR 500/month',
-      popular: false
-    },
-    {
-      icon: Shield,
-      title: 'SSL Certificates',
-      description: 'Secure your website and build customer trust with SSL certificates.',
-      features: [
-        'Domain validated (DV) certificates',
-        'Organization validated (OV) certificates',
-        'Extended validation (EV) certificates',
-        'Wildcard SSL for subdomains',
-        '256-bit encryption',
-        'Browser compatibility guarantee',
-        'Free installation and setup'
-      ],
-      price: 'Starting from PKR 1,500/year',
-      popular: false
-    },
-    {
-      icon: Code,
-      title: 'Website Development',
-      description: 'Custom website development tailored to your business needs.',
-      features: [
-        'Responsive web design',
-        'Content management systems (CMS)',
-        'E-commerce solutions',
-        'Custom web applications',
-        'SEO-friendly development',
-        'Cross-browser compatibility',
-        'Mobile optimization',
-        'Ongoing maintenance and support'
-      ],
-      price: 'Starting from PKR 25,000',
-      popular: false
-    },
-    {
-      icon: TrendingUp,
-      title: 'Digital Marketing',
-      description: 'Comprehensive digital marketing solutions to grow your online presence.',
-      features: [
-        'Search engine optimization (SEO)',
-        'Pay-per-click (PPC) advertising',
-        'Social media marketing',
-        'Content marketing strategy',
-        'Email marketing campaigns',
-        'Analytics and reporting',
-        'Brand identity development'
-      ],
-      price: 'Starting from PKR 15,000/month',
-      popular: false
-    },
-    {
-      icon: Database,
-      title: 'Database Solutions',
-      description: 'Robust database hosting and management services.',
-      features: [
-        'MySQL and PostgreSQL hosting',
-        'Database optimization',
-        'Regular backups and recovery',
-        'Performance monitoring',
-        'Security hardening',
-        'Remote database access',
-        'Database migration services'
-      ],
-      price: 'Starting from PKR 3,000/month',
-      popular: false
-    },
-    {
-      icon: Smartphone,
-      title: 'Mobile App Development',
-      description: 'Native and cross-platform mobile app development services.',
-      features: [
-        'iOS and Android development',
-        'Cross-platform solutions (React Native, Flutter)',
-        'UI/UX design',
-        'App store optimization',
-        'Push notifications',
-        'In-app purchases integration',
-        'App maintenance and updates'
-      ],
-      price: 'Starting from PKR 150,000',
-      popular: false
+  const [services, setServices] = useState<Service[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    fetchServices()
+  }, [])
+
+  const fetchServices = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('services')
+        .select('*')
+        .eq('is_active', true)
+        .order('display_order')
+
+      if (error) throw error
+      setServices(data || [])
+    } catch (error) {
+      console.error('Error fetching services:', error)
+    } finally {
+      setLoading(false)
     }
-  ]
+  }
+
+  const getIconComponent = (iconName: string) => {
+    const icons: { [key: string]: any } = {
+      Globe,
+      Server,
+      Code,
+      Smartphone
+    }
+    return icons[iconName] || Server
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -165,8 +85,8 @@ export default function Services() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {services.map((service, index) => (
-              <div key={index} className={`bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 p-8 relative ${service.popular ? 'ring-2 ring-blue-500' : ''}`}>
-                {service.popular && (
+              <div key={service.id} className={`bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 p-8 relative ${index === 1 ? 'ring-2 ring-blue-500' : ''}`}>
+                {index === 1 && (
                   <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
                     <span className="bg-blue-500 text-white px-4 py-1 rounded-full text-sm font-semibold">
                       Most Popular
@@ -175,14 +95,16 @@ export default function Services() {
                 )}
                 
                 <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-red-500 rounded-lg flex items-center justify-center mb-6">
-                  <service.icon className="w-8 h-8 text-white" />
+                  {React.createElement(getIconComponent(service.icon), { className: "w-8 h-8 text-white" })}
                 </div>
                 
                 <h3 className="text-2xl font-bold text-gray-900 mb-4">{service.title}</h3>
                 <p className="text-gray-600 mb-6">{service.description}</p>
                 
                 <div className="mb-6">
-                  <div className="text-2xl font-bold text-blue-600 mb-4">{service.price}</div>
+                  <div className="text-2xl font-bold text-blue-600 mb-4">
+                    {service.price_starting ? `Starting from ${formatCurrency(service.price_starting)}` : 'Contact for pricing'}
+                  </div>
                   <ul className="space-y-2">
                     {service.features.map((feature, featureIndex) => (
                       <li key={featureIndex} className="flex items-start text-sm text-gray-600">
@@ -196,7 +118,7 @@ export default function Services() {
                 <Link
                   to="/contact"
                   className={`w-full inline-flex items-center justify-center px-6 py-3 rounded-lg font-semibold transition-colors ${
-                    service.popular
+                    index === 1
                       ? 'bg-blue-600 text-white hover:bg-blue-700'
                       : 'bg-gray-100 text-gray-900 hover:bg-gray-200'
                   }`}
@@ -225,7 +147,7 @@ export default function Services() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
             <div className="text-center">
               <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Shield className="w-8 h-8 text-blue-600" />
+                <CheckCircle className="w-8 h-8 text-blue-600" />
               </div>
               <h3 className="text-lg font-semibold text-gray-900 mb-2">Secure & Reliable</h3>
               <p className="text-gray-600">Enterprise-grade security and 99.9% uptime guarantee</p>
@@ -233,7 +155,7 @@ export default function Services() {
 
             <div className="text-center">
               <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <TrendingUp className="w-8 h-8 text-red-600" />
+                <ArrowRight className="w-8 h-8 text-red-600" />
               </div>
               <h3 className="text-lg font-semibold text-gray-900 mb-2">Scalable Solutions</h3>
               <p className="text-gray-600">Grow your business with our flexible and scalable services</p>
@@ -241,7 +163,7 @@ export default function Services() {
 
             <div className="text-center">
               <div className="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Mail className="w-8 h-8 text-yellow-600" />
+                <CheckCircle className="w-8 h-8 text-yellow-600" />
               </div>
               <h3 className="text-lg font-semibold text-gray-900 mb-2">24/7 Support</h3>
               <p className="text-gray-600">Round-the-clock technical support from our expert team</p>
