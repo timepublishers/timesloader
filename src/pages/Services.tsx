@@ -9,7 +9,7 @@ import {
   ArrowRight,
   CheckCircle
 } from 'lucide-react'
-import { supabase } from '../lib/supabase'
+import { api } from '../lib/api'
 import { formatCurrency } from '../lib/utils'
 
 interface Service {
@@ -33,14 +33,8 @@ export default function Services() {
 
   const fetchServices = async () => {
     try {
-      const { data, error } = await supabase
-        .from('services')
-        .select('*')
-        .eq('is_active', true)
-        .order('display_order')
-
-      if (error) throw error
-      setServices(data || [])
+      const services = await api.getServices()
+      setServices(services)
     } catch (error) {
       console.error('Error fetching services:', error)
     } finally {

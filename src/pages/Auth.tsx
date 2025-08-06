@@ -3,7 +3,14 @@ import { useNavigate, useLocation } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { supabase } from '../lib/supabase'
+import { 
+  createUserWithEmailAndPassword, 
+  signInWithEmailAndPassword, 
+  signInWithPopup,
+  sendEmailVerification
+} from 'firebase/auth'
+import { auth, googleProvider, microsoftProvider } from '../lib/firebase'
+import { api } from '../lib/api'
 import { useAuth } from '../contexts/AuthContext'
 import { LogIn, UserPlus, Eye, EyeOff, Mail, User, Building, Phone } from 'lucide-react'
 
@@ -58,23 +65,24 @@ export default function Auth() {
     setError(null)
     
     try {
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email: data.email,
-        password: data.password,
-        options: {
-          data: {
-            full_name: data.fullName,
-            phone: data.phone || '',
-            company: data.company || '',
-          },
-          emailRedirectTo: `${window.location.origin}/dashboard`
-        }
+      // Create user with Firebase
+      const userCredential = await createUserWithEmailAndPassword(auth, data.email, data.password)
+      
+      // Send email verification
+      await sendEmailVerification(userCredential.user)
+      
+      // Get Firebase ID token
+      const idToken = await userCredential.user.getIdToken()
+      
+      // Register user in our backend
+      await api.register(idToken, {
+        fullName: data.fullName,
+        phone: data.phone,
+        company: data.company
       })
-
-      if (authError) throw authError
-
-      if (authData.user && !authData.session) {
-        setError('Please check your email and click the confirmation link to complete your registration.')
+      
+      if (!userCredential.user.emailVerified) {
+        setError('Please check your email and click the verification link to complete your registration.')
       } else {
         navigate('/dashboard')
       }
@@ -91,12 +99,12 @@ export default function Auth() {
     setError(null)
     
     try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email: data.email,
-        password: data.password,
-      })
-
-      if (error) throw error
+      const userCredential = await signInWithEmailAndPassword(auth, data.email, data.password)
+      
+      // Get Firebase ID token and login to our backend
+      const idToken = await userCredential.user.getIdToken()
+      await api.login(idToken)
+      
       navigate('/dashboard')
     } catch (error: any) {
       console.error('Sign in error:', error)
@@ -111,14 +119,14 @@ export default function Auth() {
     setError(null)
     
     try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider,
-        options: {
-          redirectTo: `${window.location.origin}/dashboard`
-        }
-      })
-
-      if (error) throw error
+      const authProvider = provider === 'google' ? googleProvider : microsoftProvider
+      const result = await signInWithPopup(auth, authProvider)
+      
+      // Get Firebase ID token and login to our backend
+      const idToken = await result.user.getIdToken()
+      await api.login(idToken)
+      
+      navigate('/dashboard')
     } catch (error: any) {
       console.error('OAuth error:', error)
       setError(error.message || `An error occurred during ${provider} sign in`)

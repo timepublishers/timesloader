@@ -15,7 +15,7 @@ import {
   Save,
   X
 } from 'lucide-react'
-import { supabase } from '../lib/supabase'
+import { api } from '../lib/api'
 import { formatCurrency, formatDate } from '../lib/utils'
 
 const serviceSchema = z.object({
@@ -105,17 +105,17 @@ export default function AdminPanel() {
 
   const fetchData = async () => {
     try {
-      const [servicesResponse, hostingResponse, domainResponse, contactResponse] = await Promise.all([
-        supabase.from('services').select('*').order('display_order'),
-        supabase.from('hosting_packages').select('*').order('price'),
-        supabase.from('domain_pricing').select('*').order('price'),
-        supabase.from('contact_inquiries').select('*').order('created_at', { ascending: false })
+      const [services, hostingPackages, domainPricing, contactInquiries] = await Promise.all([
+        api.getAllServices(),
+        api.getAllHostingPackages(),
+        api.getAllDomainPricing(),
+        api.getContactInquiries()
       ])
 
-      if (servicesResponse.data) setServices(servicesResponse.data)
-      if (hostingResponse.data) setHostingPackages(hostingResponse.data)
-      if (domainResponse.data) setDomainPricing(domainResponse.data)
-      if (contactResponse.data) setContactInquiries(contactResponse.data)
+      setServices(services)
+      setHostingPackages(hostingPackages)
+      setDomainPricing(domainPricing)
+      setContactInquiries(contactInquiries)
     } catch (error) {
       console.error('Error fetching data:', error)
     } finally {
@@ -140,16 +140,9 @@ export default function AdminPanel() {
       }
 
       if (editingItem) {
-        const { error } = await supabase
-          .from('services')
-          .update(serviceData)
-          .eq('id', editingItem.id)
-        if (error) throw error
+        await api.updateService(editingItem.id, serviceData)
       } else {
-        const { error } = await supabase
-          .from('services')
-          .insert([serviceData])
-        if (error) throw error
+        await api.createService(serviceData)
       }
 
       await fetchData()
@@ -165,12 +158,7 @@ export default function AdminPanel() {
     if (!confirm('Are you sure you want to delete this service?')) return
     
     try {
-      const { error } = await supabase
-        .from('services')
-        .delete()
-        .eq('id', id)
-      
-      if (error) throw error
+      await api.deleteService(id)
       await fetchData()
     } catch (error) {
       console.error('Error deleting service:', error)

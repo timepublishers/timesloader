@@ -3,7 +3,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { Mail, Phone, MapPin, Clock, Send, CheckCircle } from 'lucide-react'
-import { supabase } from '../lib/supabase'
+import { api } from '../lib/api'
 
 const contactSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
@@ -33,40 +33,13 @@ export default function Contact() {
     setIsSubmitting(true)
     
     try {
-      // Save to database
-      const { error } = await supabase
-        .from('contact_inquiries')
-        .insert([{
-          name: data.name,
-          email: data.email,
-          phone: data.phone || null,
-          company: data.company || null,
-          subject: data.subject,
-          message: data.message,
-          status: 'new'
-        }])
-
-      if (error) throw error
-
-      // Send emails via edge function
-      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-contact-email`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data),
-      })
-
-      if (!response.ok) {
-        throw new Error('Failed to send email')
-      }
+      await api.submitContactForm(data)
 
       setIsSubmitted(true)
       reset()
     } catch (error) {
       console.error('Error submitting form:', error)
-      alert('There was an error submitting your message. Please try again.')
+      setError(error.message || 'There was an error submitting your message. Please try again.')
     } finally {
       setIsSubmitting(false)
     }

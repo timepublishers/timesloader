@@ -12,7 +12,7 @@ import {
   Users,
   HardDrive
 } from 'lucide-react'
-import { supabase } from '../lib/supabase'
+import { api } from '../lib/api'
 import { formatCurrency } from '../lib/utils'
 
 interface HostingPackage {
@@ -46,13 +46,13 @@ export default function Hosting() {
 
   const fetchData = async () => {
     try {
-      const [hostingResponse, domainResponse] = await Promise.all([
-        supabase.from('hosting_packages').select('*').eq('is_active', true).order('price'),
-        supabase.from('domain_pricing').select('*').eq('is_active', true).order('price')
+      const [hostingPackages, domainPricing] = await Promise.all([
+        api.getHostingPackages(),
+        api.getDomainPricing()
       ])
 
-      if (hostingResponse.data) setHostingPackages(hostingResponse.data)
-      if (domainResponse.data) setDomainPricing(domainResponse.data)
+      setHostingPackages(hostingPackages)
+      setDomainPricing(domainPricing)
     } catch (error) {
       console.error('Error fetching data:', error)
     } finally {

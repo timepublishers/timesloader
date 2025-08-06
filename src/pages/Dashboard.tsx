@@ -13,7 +13,7 @@ import {
   Settings
 } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
-import { supabase } from '../lib/supabase'
+import { api } from '../lib/api'
 import { formatCurrency, formatDate, getDaysUntil } from '../lib/utils'
 
 interface UserDomain {
@@ -67,38 +67,16 @@ export default function Dashboard() {
   }, [user])
 
   const fetchUserData = async () => {
-    if (!user) return
-
     try {
-      const [domainsResponse, hostingResponse, complaintsResponse] = await Promise.all([
-        supabase
-          .from('user_domains')
-          .select('*')
-          .eq('user_id', user.id)
-          .order('created_at', { ascending: false }),
-        supabase
-          .from('user_hosting')
-          .select(`
-            *,
-            hosting_packages (
-              name,
-              storage,
-              bandwidth
-            )
-          `)
-          .eq('user_id', user.id)
-          .order('created_at', { ascending: false }),
-        supabase
-          .from('complaints')
-          .select('*')
-          .eq('user_id', user.id)
-          .order('created_at', { ascending: false })
-          .limit(5)
+      const [domains, hosting, complaints] = await Promise.all([
+        api.getUserDomains(),
+        api.getUserHosting(),
+        api.getUserComplaints()
       ])
 
-      if (domainsResponse.data) setDomains(domainsResponse.data)
-      if (hostingResponse.data) setHosting(hostingResponse.data)
-      if (complaintsResponse.data) setComplaints(complaintsResponse.data)
+      setDomains(domains)
+      setHosting(hosting)
+      setComplaints(complaints.slice(0, 5)) // Show only recent 5
     } catch (error) {
       console.error('Error fetching user data:', error)
     } finally {
