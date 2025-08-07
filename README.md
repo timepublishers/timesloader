@@ -30,6 +30,34 @@ A comprehensive web hosting and domain registration platform built with React, N
 
 ## 🔧 Setup Instructions
 
+### **CRITICAL: Firebase Authentication Setup**
+
+**Before the app will work, you MUST configure Firebase Authentication:**
+
+1. **Go to Firebase Console**: https://console.firebase.google.com
+2. **Select your project** (or create a new one)
+3. **Enable Authentication Methods**:
+   - Go to **Authentication** → **Sign-in method**
+   - **Enable Email/Password**: Click on "Email/Password" and toggle it ON
+   - **Enable Google**: Click on "Google" and toggle it ON (add your project's OAuth consent screen)
+   - **Enable Microsoft**: Click on "Microsoft" and toggle it ON (requires Microsoft Azure app setup)
+
+4. **Add Authorized Domains**:
+   - Go to **Authentication** → **Settings** → **Authorized domains**
+   - Add these domains:
+     - `localhost`
+     - `127.0.0.1`
+     - Your production domain when you deploy
+
+5. **Get Firebase Configuration**:
+   - Go to **Project Settings** → **General** → **Your apps**
+   - Click "Add app" → Web app
+   - Copy the configuration object
+
+**Without these steps, you'll get these errors:**
+- `auth/operation-not-allowed` - Authentication method not enabled
+- `auth/unauthorized-domain` - Domain not authorized
+
 ### 1. Clone and Install Dependencies
 
 ```bash

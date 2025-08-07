@@ -88,7 +88,19 @@ export default function Auth() {
       }
     } catch (error: any) {
       console.error('Sign up error:', error)
-      setError(error.message || 'An error occurred during sign up')
+      
+      // Provide specific error messages for common Firebase errors
+      if (error.code === 'auth/operation-not-allowed') {
+        setError('Email/Password authentication is not enabled. Please contact support or check Firebase configuration.')
+      } else if (error.code === 'auth/weak-password') {
+        setError('Password is too weak. Please choose a stronger password.')
+      } else if (error.code === 'auth/email-already-in-use') {
+        setError('An account with this email already exists. Please sign in instead.')
+      } else if (error.code === 'auth/invalid-email') {
+        setError('Please enter a valid email address.')
+      } else {
+        setError(error.message || 'An error occurred during sign up')
+      }
     } finally {
       setLoading(false)
     }
@@ -108,7 +120,21 @@ export default function Auth() {
       navigate('/dashboard')
     } catch (error: any) {
       console.error('Sign in error:', error)
-      setError(error.message || 'An error occurred during sign in')
+      
+      // Provide specific error messages for common Firebase errors
+      if (error.code === 'auth/operation-not-allowed') {
+        setError('Email/Password authentication is not enabled. Please contact support.')
+      } else if (error.code === 'auth/user-not-found') {
+        setError('No account found with this email. Please sign up first.')
+      } else if (error.code === 'auth/wrong-password') {
+        setError('Incorrect password. Please try again.')
+      } else if (error.code === 'auth/invalid-email') {
+        setError('Please enter a valid email address.')
+      } else if (error.code === 'auth/user-disabled') {
+        setError('This account has been disabled. Please contact support.')
+      } else {
+        setError(error.message || 'An error occurred during sign in')
+      }
     } finally {
       setLoading(false)
     }
@@ -129,7 +155,19 @@ export default function Auth() {
       navigate('/dashboard')
     } catch (error: any) {
       console.error('OAuth error:', error)
-      setError(error.message || `An error occurred during ${provider} sign in`)
+      
+      // Provide specific error messages for common OAuth errors
+      if (error.code === 'auth/operation-not-allowed') {
+        setError(`${provider.charAt(0).toUpperCase() + provider.slice(1)} authentication is not enabled. Please contact support.`)
+      } else if (error.code === 'auth/unauthorized-domain') {
+        setError('This domain is not authorized for authentication. Please contact support or check Firebase configuration.')
+      } else if (error.code === 'auth/popup-closed-by-user') {
+        setError('Sign-in was cancelled. Please try again.')
+      } else if (error.code === 'auth/popup-blocked') {
+        setError('Pop-up was blocked by your browser. Please allow pop-ups and try again.')
+      } else {
+        setError(error.message || `An error occurred during ${provider} sign in`)
+      }
       setLoading(false)
     }
   }
