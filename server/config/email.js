@@ -32,6 +32,161 @@ export const sendEmail = async (to, subject, html, text = '') => {
   }
 };
 
+export const sendVerificationEmail = async (email, fullName, pin) => {
+  const subject = 'Verify Your Email - Time Publishers';
+  
+  const html = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+      <div style="background: linear-gradient(135deg, #2563eb, #dc2626); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
+        <h1 style="margin: 0; font-size: 28px;">Time Publishers Private Limited</h1>
+        <p style="margin: 10px 0 0 0; font-size: 16px;">Email Verification Required</p>
+      </div>
+      
+      <div style="background: #f9fafb; padding: 30px; border-radius: 0 0 10px 10px;">
+        <h2 style="color: #1f2937; margin-top: 0;">Hello ${fullName}!</h2>
+        
+        <p style="color: #4b5563; font-size: 16px; line-height: 1.6;">
+          Thank you for registering with Time Publishers Private Limited. To complete your registration and verify your email address, please use the verification PIN below:
+        </p>
+        
+        <div style="background: white; border: 2px solid #2563eb; border-radius: 10px; padding: 20px; text-align: center; margin: 30px 0;">
+          <p style="color: #6b7280; margin: 0 0 10px 0; font-size: 14px;">Your Verification PIN</p>
+          <h1 style="color: #2563eb; font-size: 36px; font-weight: bold; margin: 0; letter-spacing: 8px;">${pin}</h1>
+          <p style="color: #ef4444; margin: 10px 0 0 0; font-size: 14px;">⏰ Expires in 10 minutes</p>
+        </div>
+        
+        <div style="background: #fef3c7; border-left: 4px solid #f59e0b; padding: 15px; margin: 20px 0; border-radius: 5px;">
+          <p style="margin: 0; color: #92400e; font-size: 14px;">
+            <strong>Important:</strong> This PIN will expire in 10 minutes for security reasons. If you don't verify within this time, you'll need to request a new PIN.
+          </p>
+        </div>
+        
+        <p style="color: #4b5563; font-size: 16px; line-height: 1.6;">
+          Enter this PIN on the verification page to activate your account and start using our services.
+        </p>
+        
+        <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb;">
+          <p style="color: #6b7280; font-size: 14px; margin: 0;">
+            <strong>Need help?</strong><br>
+            Email: websol@timepublishers.com<br>
+            Phone: +92-21-34533913<br>
+            Website: www.timepublishers.com
+          </p>
+        </div>
+        
+        <p style="color: #9ca3af; font-size: 12px; margin-top: 20px;">
+          If you didn't create an account with Time Publishers, please ignore this email.
+        </p>
+      </div>
+    </div>
+  `;
+
+  const text = `
+    Time Publishers Private Limited - Email Verification
+    
+    Hello ${fullName}!
+    
+    Your verification PIN is: ${pin}
+    
+    This PIN expires in 10 minutes.
+    
+    Enter this PIN on the verification page to activate your account.
+    
+    Need help? Contact us at websol@timepublishers.com or +92-21-34533913
+  `;
+
+  await sendEmail(email, subject, html, text);
+};
+
+export const sendWelcomeEmail = async (email, fullName) => {
+  const subject = 'Welcome to Time Publishers Private Limited!';
+  
+  const html = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+      <div style="background: linear-gradient(135deg, #2563eb, #dc2626); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
+        <h1 style="margin: 0; font-size: 28px;">Welcome to Time Publishers!</h1>
+        <p style="margin: 10px 0 0 0; font-size: 16px;">Your account is now active</p>
+      </div>
+      
+      <div style="background: #f9fafb; padding: 30px; border-radius: 0 0 10px 10px;">
+        <h2 style="color: #1f2937; margin-top: 0;">Hello ${fullName}!</h2>
+        
+        <p style="color: #4b5563; font-size: 16px; line-height: 1.6;">
+          Welcome to Time Publishers Private Limited! Your account has been successfully created and verified. You can now access all our services:
+        </p>
+        
+        <div style="background: white; border-radius: 10px; padding: 20px; margin: 20px 0;">
+          <h3 style="color: #1f2937; margin-top: 0;">🚀 What you can do now:</h3>
+          <ul style="color: #4b5563; line-height: 1.8;">
+            <li>Register and manage domain names</li>
+            <li>Purchase web hosting packages</li>
+            <li>Access your client dashboard</li>
+            <li>Get 24/7 technical support</li>
+            <li>Chat with our AI assistant</li>
+            <li>Submit support tickets</li>
+          </ul>
+        </div>
+        
+        <div style="text-align: center; margin: 30px 0;">
+          <a href="${process.env.FRONTEND_URL}/dashboard" style="background: #2563eb; color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;">
+            Access Your Dashboard
+          </a>
+        </div>
+        
+        <div style="background: #dbeafe; border-left: 4px solid #2563eb; padding: 15px; margin: 20px 0; border-radius: 5px;">
+          <p style="margin: 0; color: #1e40af; font-size: 14px;">
+            <strong>💡 Pro Tip:</strong> Check out our hosting packages and domain pricing on our website. We offer competitive rates and excellent support!
+          </p>
+        </div>
+        
+        <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb;">
+          <p style="color: #6b7280; font-size: 14px; margin: 0;">
+            <strong>Need assistance?</strong><br>
+            Email: websol@timepublishers.com<br>
+            Phone: +92-21-34533913<br>
+            Website: www.timepublishers.com
+          </p>
+        </div>
+        
+        <p style="color: #4b5563; font-size: 16px; margin-top: 20px;">
+          Thank you for choosing Time Publishers Private Limited for your digital needs!
+        </p>
+        
+        <p style="color: #6b7280; font-size: 14px; margin-top: 20px;">
+          Best regards,<br>
+          <strong>The Time Publishers Team</strong>
+        </p>
+      </div>
+    </div>
+  `;
+
+  const text = `
+    Welcome to Time Publishers Private Limited!
+    
+    Hello ${fullName}!
+    
+    Your account has been successfully created and verified. You can now access all our services:
+    
+    - Register and manage domain names
+    - Purchase web hosting packages  
+    - Access your client dashboard
+    - Get 24/7 technical support
+    - Chat with our AI assistant
+    - Submit support tickets
+    
+    Visit your dashboard: ${process.env.FRONTEND_URL}/dashboard
+    
+    Need assistance? Contact us at websol@timepublishers.com or +92-21-34533913
+    
+    Thank you for choosing Time Publishers Private Limited!
+    
+    Best regards,
+    The Time Publishers Team
+  `;
+
+  await sendEmail(email, subject, html, text);
+};
+
 export const sendContactEmail = async (contactData) => {
   const { name, email, phone, company, subject, message } = contactData;
 

@@ -46,7 +46,21 @@ class ApiClient {
   async register(idToken, userData) {
     return this.request('/auth/register', {
       method: 'POST',
-      body: { idToken, userData },
+      body: userData,
+    });
+  }
+
+  async verifyEmail(email, pin) {
+    return this.request('/auth/verify-email', {
+      method: 'POST',
+      body: { email, pin },
+    });
+  }
+
+  async resendPin(email) {
+    return this.request('/auth/resend-pin', {
+      method: 'POST',
+      body: { email },
     });
   }
 

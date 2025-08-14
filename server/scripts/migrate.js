@@ -21,6 +21,9 @@ const createTables = async () => {
         company VARCHAR(255),
         is_admin BOOLEAN DEFAULT FALSE,
         email_verified BOOLEAN DEFAULT FALSE,
+        verification_pin VARCHAR(6),
+        pin_expiry TIMESTAMP WITH TIME ZONE,
+        password_hash VARCHAR(255),
         created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
         updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
       );
