@@ -14,7 +14,7 @@ const createTables = async () => {
     await pool.query(`
       CREATE TABLE IF NOT EXISTS users (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-        firebase_uid VARCHAR(255) UNIQUE NOT NULL,
+        firebase_uid VARCHAR(255) UNIQUE,
         email VARCHAR(255) UNIQUE NOT NULL,
         full_name VARCHAR(255),
         phone VARCHAR(50),
@@ -33,7 +33,7 @@ const createTables = async () => {
     await pool.query(`
       CREATE TABLE IF NOT EXISTS services (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-        title VARCHAR(255) NOT NULL,
+        title VARCHAR(255) UNIQUE NOT NULL,
         description TEXT NOT NULL,
         icon VARCHAR(100) DEFAULT 'Server',
         features TEXT[] DEFAULT '{}',
@@ -49,7 +49,7 @@ const createTables = async () => {
     await pool.query(`
       CREATE TABLE IF NOT EXISTS hosting_packages (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-        name VARCHAR(255) NOT NULL,
+        name VARCHAR(255) UNIQUE NOT NULL,
         description TEXT NOT NULL,
         price INTEGER NOT NULL,
         storage VARCHAR(100) NOT NULL,
