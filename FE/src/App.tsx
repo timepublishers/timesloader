@@ -11,6 +11,7 @@ import Auth from './pages/Auth'
 import Dashboard from './pages/Dashboard'
 import AdminPanel from './pages/AdminPanel'
 import Chat from './pages/Chat'
+import InvoiceDetails from './pages/InvoiceDetails'
 import ProtectedRoute from './components/ProtectedRoute'
 import AdminRoute from './components/AdminRoute'
 
@@ -40,6 +41,14 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <Chat />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/invoices/:id" 
+                element={
+                  <ProtectedRoute>
+                    <InvoiceDetails />
                   </ProtectedRoute>
                 } 
               />

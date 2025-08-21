@@ -58,6 +58,7 @@ export default function Dashboard() {
   const [domains, setDomains] = useState<UserDomain[]>([])
   const [hosting, setHosting] = useState<UserHosting[]>([])
   const [complaints, setComplaints] = useState<UserComplaint[]>([])
+  const [invoices, setInvoices] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -68,15 +69,17 @@ export default function Dashboard() {
 
   const fetchUserData = async () => {
     try {
-      const [domains, hosting, complaints] = await Promise.all([
+      const [domains, hosting, complaints, invoices] = await Promise.all([
         api.getUserDomains(),
         api.getUserHosting(),
-        api.getUserComplaints()
+        api.getUserComplaints(),
+        api.getUserInvoices()
       ])
 
       setDomains(domains)
       setHosting(hosting)
       setComplaints(complaints.slice(0, 5)) // Show only recent 5
+      setInvoices(invoices.slice(0, 5)) // Show only recent 5
     } catch (error) {
       console.error('Error fetching user data:', error)
     } finally {
@@ -302,6 +305,43 @@ export default function Dashboard() {
             )}
           </div>
         </div>
+        {/* Recent Invoices */}
+        {invoices.length > 0 && (
+          <div className="mt-8 bg-white rounded-xl shadow-lg p-6">
+            <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center">
+              <FileText className="w-6 h-6 text-blue-600 mr-2" />
+              Recent Invoices
+            </h2>
+            <div className="space-y-4">
+              {invoices.map((invoice) => (
+                <div key={invoice.id} className="border border-gray-200 rounded-lg p-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className="font-semibold text-gray-900">{invoice.invoice_number}</h3>
+                    <div className="flex space-x-2">
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(invoice.status)}`}>
+                        {invoice.status}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between text-sm text-gray-600">
+                    <span>Amount: {formatCurrency(invoice.total_amount)}</span>
+                    <span>Due: {formatDate(invoice.due_date)}</span>
+                  </div>
+                  {invoice.status === 'pending' && (
+                    <div className="mt-2">
+                      <Link
+                        to={`/invoices/${invoice.id}`}
+                        className="text-blue-600 hover:text-blue-700 text-sm font-medium"
+                      >
+                        Mark as Paid →
+                      </Link>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Recent Complaints */}
         {complaints.length > 0 && (
