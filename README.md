@@ -143,8 +143,6 @@ PORT=3001
 NODE_ENV=development
 FRONTEND_URL=http://localhost:5173
 
-# Admin Configuration
-ADMIN_EMAIL=websol@timepublishers.com
 ```
 
 ### 5. How to Get Firebase Configuration
