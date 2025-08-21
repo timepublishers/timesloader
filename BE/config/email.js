@@ -203,6 +203,104 @@ export const sendWelcomeEmail = async (email, fullName) => {
   await sendEmail(email, subject, html, text);
 };
 
+export const sendInvoiceEmail = async (email, fullName, invoice, services) => {
+  const subject = `Invoice ${invoice.invoice_number} - Time Publishers`;
+  
+  const servicesHtml = services.map(service => `
+    <tr>
+      <td style="padding: 8px; border-bottom: 1px solid #e5e7eb;">${service.description}</td>
+      <td style="padding: 8px; border-bottom: 1px solid #e5e7eb; text-align: right;">PKR ${service.amount.toLocaleString()}</td>
+    </tr>
+  `).join('');
+  
+  const html = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+      <div style="background: linear-gradient(135deg, #2563eb, #dc2626); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
+        <h1 style="margin: 0; font-size: 28px;">Time Publishers Private Limited</h1>
+        <p style="margin: 10px 0 0 0; font-size: 16px;">Invoice ${invoice.invoice_number}</p>
+      </div>
+      
+      <div style="background: #f9fafb; padding: 30px; border-radius: 0 0 10px 10px;">
+        <h2 style="color: #1f2937; margin-top: 0;">Hello ${fullName}!</h2>
+        
+        <p style="color: #4b5563; font-size: 16px; line-height: 1.6;">
+          Please find your invoice details below:
+        </p>
+        
+        <div style="background: white; border-radius: 10px; padding: 20px; margin: 20px 0;">
+          <table style="width: 100%; border-collapse: collapse;">
+            <tr>
+              <td style="padding: 8px; font-weight: bold;">Invoice Number:</td>
+              <td style="padding: 8px;">${invoice.invoice_number}</td>
+            </tr>
+            <tr>
+              <td style="padding: 8px; font-weight: bold;">Due Date:</td>
+              <td style="padding: 8px;">${new Date(invoice.due_date).toLocaleDateString()}</td>
+            </tr>
+            <tr>
+              <td style="padding: 8px; font-weight: bold;">Total Amount:</td>
+              <td style="padding: 8px; font-weight: bold; color: #2563eb;">PKR ${invoice.total_amount.toLocaleString()}</td>
+            </tr>
+          </table>
+        </div>
+        
+        <h3 style="color: #1f2937;">Services:</h3>
+        <table style="width: 100%; border-collapse: collapse; background: white; border-radius: 10px; overflow: hidden;">
+          <thead>
+            <tr style="background: #f3f4f6;">
+              <th style="padding: 12px; text-align: left;">Description</th>
+              <th style="padding: 12px; text-align: right;">Amount</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${servicesHtml}
+          </tbody>
+        </table>
+        
+        <div style="background: #dbeafe; border-left: 4px solid #2563eb; padding: 15px; margin: 20px 0; border-radius: 5px;">
+          <p style="margin: 0; color: #1e40af; font-size: 14px;">
+            <strong>💡 Payment Instructions:</strong> You can mark this invoice as paid in your dashboard by uploading payment proof.
+          </p>
+        </div>
+        
+        <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb;">
+          <p style="color: #6b7280; font-size: 14px; margin: 0;">
+            <strong>Need help?</strong><br>
+            Email: websol@timepublishers.com<br>
+            Phone: +92-21-34533913<br>
+            Website: www.timepublishers.com
+          </p>
+        </div>
+        
+        <p style="color: #4b5563; font-size: 16px; margin-top: 20px;">
+          Thank you for choosing Time Publishers Private Limited!
+        </p>
+      </div>
+    </div>
+  `;
+
+  const text = `
+    Time Publishers Private Limited - Invoice ${invoice.invoice_number}
+    
+    Hello ${fullName}!
+    
+    Invoice Number: ${invoice.invoice_number}
+    Due Date: ${new Date(invoice.due_date).toLocaleDateString()}
+    Total Amount: PKR ${invoice.total_amount.toLocaleString()}
+    
+    Services:
+    ${services.map(s => `- ${s.description}: PKR ${s.amount.toLocaleString()}`).join('\n')}
+    
+    You can mark this invoice as paid in your dashboard by uploading payment proof.
+    
+    Need help? Contact us at websol@timepublishers.com or +92-21-34533913
+    
+    Thank you for choosing Time Publishers Private Limited!
+  `;
+
+  await sendEmail(email, subject, html, text);
+};
+
 export const sendContactEmail = async (contactData) => {
   const { name, email, phone, company, subject, message } = contactData;
 

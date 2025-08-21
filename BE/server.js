@@ -12,6 +12,7 @@ import domainsRoutes from './routes/domains.js';
 import contactRoutes from './routes/contact.js';
 import complaintsRoutes from './routes/complaints.js';
 import adminRoutes from './routes/admin.js';
+import invoicesRoutes from './routes/invoices.js';
 
 // Import database
 import pool from './config/database.js';
@@ -67,6 +68,7 @@ app.use('/api/domains', domainsRoutes);
 app.use('/api/contact', contactRoutes);
 app.use('/api/complaints', complaintsRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/invoices', invoicesRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {
