@@ -89,7 +89,6 @@ router.post('/services/domain', authenticateToken, requireAdmin, [
   body('user_id').isUUID().withMessage('Valid user ID is required'),
   body('domain_name').trim().isLength({ min: 1 }).withMessage('Domain name is required'),
   body('tld').trim().isLength({ min: 1 }).withMessage('TLD is required'),
-  body('price_paid').isInt({ min: 0 }).withMessage('Price must be a positive number'),
   body('registration_date').isISO8601().withMessage('Valid registration date is required'),
   body('expiry_date').isISO8601().withMessage('Valid expiry date is required'),
 ], async (req, res) => {
@@ -99,13 +98,13 @@ router.post('/services/domain', authenticateToken, requireAdmin, [
       return res.status(400).json({ errors: errors.array() });
     }
 
-    const { user_id, domain_name, tld, price_paid, registration_date, expiry_date, auto_renew } = req.body;
+    const { user_id, domain_name, tld, registration_date, expiry_date, auto_renew } = req.body;
     
     const result = await pool.query(
-      `INSERT INTO user_domains (user_id, domain_name, tld, extension, price_paid, registration_date, expiry_date, payment_due_date, auto_renew)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+      `INSERT INTO user_domains (user_id, domain_name, tld, extension, registration_date, expiry_date, payment_due_date, auto_renew)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
        RETURNING *`,
-      [user_id, domain_name, tld, tld, price_paid, registration_date, expiry_date, expiry_date, auto_renew || false]
+      [user_id, domain_name, tld, tld, registration_date, expiry_date, expiry_date, auto_renew || false]
     );
 
     res.status(201).json({
@@ -124,7 +123,6 @@ router.post('/services/hosting', authenticateToken, requireAdmin, [
   body('package_id').isUUID().withMessage('Valid package ID is required'),
   body('domain_name').trim().isLength({ min: 1 }).withMessage('Domain name is required'),
   body('tld').trim().isLength({ min: 1 }).withMessage('TLD is required'),
-  body('price_paid').isInt({ min: 0 }).withMessage('Price must be a positive number'),
   body('start_date').isISO8601().withMessage('Valid start date is required'),
   body('expiry_date').isISO8601().withMessage('Valid expiry date is required'),
 ], async (req, res) => {
@@ -134,7 +132,7 @@ router.post('/services/hosting', authenticateToken, requireAdmin, [
       return res.status(400).json({ errors: errors.array() });
     }
 
-    const { user_id, package_id, domain_name, tld, price_paid, start_date, expiry_date, auto_renew } = req.body;
+    const { user_id, package_id, domain_name, tld, start_date, expiry_date, auto_renew } = req.body;
     
     // Get package details
     const packageResult = await pool.query('SELECT * FROM hosting_packages WHERE id = $1', [package_id]);
@@ -145,10 +143,10 @@ router.post('/services/hosting', authenticateToken, requireAdmin, [
     const pkg = packageResult.rows[0];
     
     const result = await pool.query(
-      `INSERT INTO user_hosting (user_id, package_id, domain_name, tld, price_paid, start_date, expiry_date, payment_due_date, auto_renew, storage, bandwidth, email_accounts)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+      `INSERT INTO user_hosting (user_id, package_id, domain_name, tld, start_date, expiry_date, payment_due_date, auto_renew, storage, bandwidth, email_accounts)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
        RETURNING *`,
-      [user_id, package_id, domain_name, tld, price_paid, start_date, expiry_date, expiry_date, auto_renew || false, pkg.storage, pkg.bandwidth, pkg.email_accounts]
+      [user_id, package_id, domain_name, tld, start_date, expiry_date, expiry_date, auto_renew || false, pkg.storage, pkg.bandwidth, pkg.email_accounts]
     );
 
     res.status(201).json({
@@ -166,7 +164,6 @@ router.post('/services/other', authenticateToken, requireAdmin, [
   body('user_id').isUUID().withMessage('Valid user ID is required'),
   body('title').trim().isLength({ min: 1 }).withMessage('Title is required'),
   body('description').trim().isLength({ min: 1 }).withMessage('Description is required'),
-  body('amount').isInt({ min: 0 }).withMessage('Amount must be a positive number'),
   body('period').isIn(['one_time', 'monthly', 'yearly']).withMessage('Invalid period'),
 ], async (req, res) => {
   try {
@@ -175,13 +172,13 @@ router.post('/services/other', authenticateToken, requireAdmin, [
       return res.status(400).json({ errors: errors.array() });
     }
 
-    const { user_id, title, description, amount, period } = req.body;
+    const { user_id, title, description, period } = req.body;
     
     const result = await pool.query(
-      `INSERT INTO other_services (user_id, title, description, amount, period)
-       VALUES ($1, $2, $3, $4, $5)
+      `INSERT INTO other_services (user_id, title, description, period)
+       VALUES ($1, $2, $3, $4)
        RETURNING *`,
-      [user_id, title, description, amount, period]
+      [user_id, title, description, period]
     );
 
     res.status(201).json({
@@ -221,6 +218,127 @@ router.get('/users/:id/services', authenticateToken, requireAdmin, async (req, r
   }
 });
 
+// Get all services with filtering and sorting
+router.get('/services/all', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const { user_id, service_type, sort_by = 'created_at', sort_order = 'DESC' } = req.query;
+    
+    let whereClause = '';
+    let queryParams = [];
+    let paramCount = 0;
+    
+    if (user_id) {
+      paramCount++;
+      whereClause += `WHERE u.id = $${paramCount}`;
+      queryParams.push(user_id);
+    }
+    
+    // Base query for domains
+    let domainsQuery = `
+      SELECT 
+        ud.id,
+        ud.user_id,
+        u.full_name as user_name,
+        u.email as user_email,
+        ud.domain_name,
+        ud.tld,
+        ud.registration_date,
+        ud.expiry_date,
+        ud.status,
+        ud.auto_renew,
+        ud.created_at,
+        ud.updated_at,
+        'domain' as service_type,
+        CONCAT(ud.domain_name, ud.tld) as service_name,
+        NULL as package_name,
+        NULL as period
+      FROM user_domains ud
+      JOIN users u ON ud.user_id = u.id
+      ${whereClause}
+    `;
+    
+    // Base query for hosting
+    let hostingQuery = `
+      SELECT 
+        uh.id,
+        uh.user_id,
+        u.full_name as user_name,
+        u.email as user_email,
+        uh.domain_name,
+        uh.tld,
+        uh.start_date as registration_date,
+        uh.expiry_date,
+        uh.status,
+        uh.auto_renew,
+        uh.created_at,
+        uh.updated_at,
+        'hosting' as service_type,
+        CONCAT(uh.domain_name, uh.tld) as service_name,
+        hp.name as package_name,
+        NULL as period
+      FROM user_hosting uh
+      JOIN users u ON uh.user_id = u.id
+      JOIN hosting_packages hp ON uh.package_id = hp.id
+      ${whereClause}
+    `;
+    
+    // Base query for other services
+    let otherQuery = `
+      SELECT 
+        os.id,
+        os.user_id,
+        u.full_name as user_name,
+        u.email as user_email,
+        NULL as domain_name,
+        NULL as tld,
+        os.created_at as registration_date,
+        NULL as expiry_date,
+        os.status,
+        NULL as auto_renew,
+        os.created_at,
+        os.updated_at,
+        'other' as service_type,
+        os.title as service_name,
+        NULL as package_name,
+        os.period
+      FROM other_services os
+      JOIN users u ON os.user_id = u.id
+      ${whereClause}
+    `;
+    
+    let finalQuery;
+    if (service_type) {
+      switch (service_type) {
+        case 'domain':
+          finalQuery = domainsQuery;
+          break;
+        case 'hosting':
+          finalQuery = hostingQuery;
+          break;
+        case 'other':
+          finalQuery = otherQuery;
+          break;
+        default:
+          finalQuery = `(${domainsQuery}) UNION ALL (${hostingQuery}) UNION ALL (${otherQuery})`;
+      }
+    } else {
+      finalQuery = `(${domainsQuery}) UNION ALL (${hostingQuery}) UNION ALL (${otherQuery})`;
+    }
+    
+    // Add ordering
+    const validSortFields = ['created_at', 'updated_at', 'user_name', 'service_name', 'service_type', 'status'];
+    const sortField = validSortFields.includes(sort_by) ? sort_by : 'created_at';
+    const sortDirection = sort_order.toUpperCase() === 'ASC' ? 'ASC' : 'DESC';
+    
+    finalQuery = `SELECT * FROM (${finalQuery}) as combined_services ORDER BY ${sortField} ${sortDirection}`;
+    
+    const result = await pool.query(finalQuery, queryParams);
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Get all services error:', error);
+    res.status(500).json({ error: 'Failed to fetch services' });
+  }
+});
 // Create invoice
 router.post('/invoices', authenticateToken, requireAdmin, [
   body('user_id').isUUID().withMessage('Valid user ID is required'),

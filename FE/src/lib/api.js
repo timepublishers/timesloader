@@ -258,6 +258,10 @@ class ApiClient {
     return this.request(`/admin/users/${userId}/services`);
   }
 
+  async getAllUserServices(params = {}) {
+    const queryString = new URLSearchParams(params).toString();
+    return this.request(`/admin/services/all${queryString ? `?${queryString}` : ''}`);
+  }
   // Invoice management
   async createInvoice(data) {
     return this.request('/admin/invoices', {
